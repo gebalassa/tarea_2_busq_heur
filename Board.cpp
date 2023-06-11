@@ -2,6 +2,7 @@
 #include <iostream>
 #include <bitset>
 #include <vector>
+#include <queue>
 #include <stdexcept>
 #include "Constants.h"
 #include "HorizontalCar.cpp"
@@ -13,10 +14,19 @@ using namespace std;
 class Board {
 public:
 	bitset<SIZE> board;
-	std::vector<shared_ptr<Car>> cars;
+	vector<shared_ptr<Car>> cars;
 	// IDs
 	char idList[15] = { 'A','B','C','D','E','F','G','H','I','J','K','L','M','O','P' };
 	int idCounter = 0;
+	// Search
+	class Compare {
+	public:
+		bool operator() (Board a, Board b) {
+			return (a.score < b.score);
+		}
+	};
+	priority_queue<Board, vector<Board>, Compare> children;
+	int score;
 
 	Board() {
 		// TODO
@@ -104,6 +114,11 @@ public:
 			}
 		}
 		return true;
+	}
+
+	// Generador de movimientos
+	void generateMoves() {
+		// TODO
 	}
 
 	// Índice de pieza desde bitset
