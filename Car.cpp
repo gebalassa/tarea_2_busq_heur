@@ -1,5 +1,6 @@
 #pragma once
 #include <bitset>
+#include <stdexcept>
 #include <string>
 #include "Constants.h"
 
@@ -11,8 +12,8 @@ public:
 	bitset<SIZE> position;
 	char id;
 	bool isHorizontal;
-	bool checkMove(string move, bitset<SIZE> board) {};
-	bitset<36> makeMove(string move, bitset<SIZE> board) {};
+	virtual bool checkMove(string move, bitset<SIZE>& board) = 0;
+	virtual bool makeMove(string move, bitset<SIZE>& board) = 0;
 
 	// Obtener origen del vehiculo (ya sea el mas abajo o el mas a la derecha)
 	int getOriginIndex() {
@@ -40,5 +41,34 @@ public:
 		}
 		return counter;
 	}
+
+	// Index for last on-bit in bitset
+	int indexLast(bitset<SIZE> b) {
+		if (b.none()) { throw invalid_argument("Empty bitset!"); }
+		int counter = -1;
+		bitset<SIZE> temp = b;
+		while (temp.any()) {
+			counter++;
+			temp = temp >> 1;
+		}
+		return counter;
+	}
+	int indexLast() { return indexLast(position); }
+
+	// Index for first on-bit in bitset
+	int indexFirst(bitset<SIZE> b) {
+		if (b.none()) { throw invalid_argument("Empty bitset!"); }
+		int counter = 0;
+		bitset<SIZE> temp = b;
+		if (temp[0] == 1) { return 0; }
+		else {
+			while (temp[0] != 1) {
+				counter++;
+				temp = temp >> 1;
+			}
+		}
+		return counter;
+	}
+	int indexFirst() { return indexFirst(position); }
 
 };

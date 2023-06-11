@@ -6,32 +6,61 @@ using namespace std;
 
 class VerticalCar : public Car {
 public:
-	bitset<SIZE> uppermost;
-	bitset<SIZE> lowermost;
+	int uppermost;
+	int lowermost;
 	VerticalCar(char id, bitset<SIZE> pos) : Car(id, pos, false) {
-		//TODO: Initialize uppermost and lowermost
+		uppermost = indexLast();
+		lowermost = indexFirst();
 	}
 
 	// Check if move is possible
-	bool checkMove(string move, bitset<SIZE> board) {
+	bool checkMove(string move, bitset<SIZE>& board) {
 		if (move == "up") {
-			//TODO
+			// Checking borders
+			if (uppermost+ROWSIZE > SIZE-1) {
+				return false;
+			}
+			// Check other cars
+			else if (board[uppermost+ROWSIZE] == 1) {
+				return false;
+			}
+			return true;
 		}
 		else if (move == "down") {
-			//TODO
+			// Checking borders
+			if (lowermost-ROWSIZE < 0) {
+				return false;
+			}
+			// Check other cars
+			else if (board[lowermost-ROWSIZE] == 1) {
+				return false;
+			}
+			return true;
 		}
 		else {
 			throw invalid_argument("VerticalCar.checkMove: MOV INVALIDO");
 		}
 	}
 
-	// Check for collision, either with another car or with wall
-	bool checkCollision(string move, bitset<SIZE> board) {
-		//TODO
-	}
-
-	// Do move, return new table, update myself (position, "----most" vars)
-	bitset<SIZE> makeMove(string move, bitset<SIZE> board) {
-		//TODO
+	// Do move on table, update myself (position, "----most" vars), return if successful
+	bool makeMove(string move, bitset<SIZE>& board) {
+		if (checkMove(move, board)) {
+			// Modifico tablero entregado y mi posicion
+			bitset<SIZE> temp = board ^ position; // Borro pos original
+			if (move == "up") {
+				position = position << ROWSIZE; // Modifico pos
+				uppermost = uppermost + ROWSIZE;
+				lowermost = lowermost + ROWSIZE;
+			}
+			else if (move == "down") {
+				position = position >> ROWSIZE; // Modifico pos
+				uppermost = uppermost - ROWSIZE;
+				lowermost = lowermost - ROWSIZE;
+			}
+			temp = temp | position; // Agrego nueva pos
+			board = position; // Modifico tablero recibido
+			return true;
+		}
+		return false;
 	}
 };

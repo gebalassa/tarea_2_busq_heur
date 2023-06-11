@@ -13,7 +13,7 @@ using namespace std;
 class Board {
 public:
 	bitset<SIZE> board;
-	vector<Car> cars;
+	std::vector<shared_ptr<Car>> cars;
 	// IDs
 	char idList[15] = { 'A','B','C','D','E','F','G','H','I','J','K','L','M','O','P' };
 	int idCounter = 0;
@@ -41,7 +41,8 @@ public:
 				}
 				// Creacion auto horizontal y agregar a 'cars'
 				HorizontalCar newCar = HorizontalCar(idList[idCounter], newCarPos); idCounter++;
-				cars.push_back(newCar);
+				shared_ptr<HorizontalCar> newCarPtr = make_shared<HorizontalCar>(newCar);
+				cars.push_back(newCarPtr);
 				// Sumar posición al mapa actual
 				board |= newCar.position;
 				// Creación exitosa
@@ -53,9 +54,10 @@ public:
 				for (int i = 1; i < length; i++) {
 					newCarPos |= (origin << i * ROWSIZE);
 				}
-				// Creación auto vertical y agregar a 'cars
+				// Creación auto vertical y agregar a 'cars'
 				VerticalCar newCar = VerticalCar(idList[idCounter], newCarPos); idCounter++;
-				cars.push_back(newCar);
+				shared_ptr<VerticalCar> newCarPtr = make_shared<VerticalCar>(newCar);
+				cars.push_back(newCarPtr);
 				// Sumar posición al mapa actual
 				board |= newCar.position;
 			}
@@ -116,7 +118,7 @@ public:
 	}
 
 	// Bitset desde índice de pieza
-	int index_from_bitset(bitset<SIZE>& piece) {
+	static int index_from_bitset(bitset<SIZE>& piece) {
 		unsigned long long index;
 		if (piece.none()) {
 			throw invalid_argument("Empty bitset!");
@@ -127,7 +129,7 @@ public:
 		return (int)index;
 	}
 	// Búsqueda de índice shifteando a la derecha.
-	void _find_piece_index(unsigned long long& index, unsigned long long piece) {
+	static void _find_piece_index(unsigned long long& index, unsigned long long piece) {
 		int counter = -1;
 		if (piece == 0) { throw invalid_argument("Empty bitset!"); }
 		else if (piece != 1 && piece % 2 != 0) { throw invalid_argument("Invalid piece board! Only single on-bit needed."); }
@@ -139,18 +141,18 @@ public:
 	void print_board_letters(bitset<SIZE> board) {
 		// Generación tablero con LETRAS de cada auto
 		char tempBoard[SIZE]; for (int i = 0; i < SIZE; i++) { tempBoard[i] = '-'; }
-		for (int i = 0; i < cars.size(); i++) {
+		for (int i = 0; i < (int)cars.size(); i++) {
 			// Letra origen del auto
-			tempBoard[cars[i].getOriginIndex()] = cars[i].id;
+			tempBoard[cars[i]->getOriginIndex()] = cars[i]->id;
 			// Resto de posiciones del auto
-			if (cars[i].isHorizontal) {
-				for (int j = 1; j < cars[i].getLength(); j++) {
-					tempBoard[cars[i].getOriginIndex() + j] = cars[i].id;
+			if (cars[i]->isHorizontal) {
+				for (int j = 1; j < cars[i]->getLength(); j++) {
+					tempBoard[cars[i]->getOriginIndex() + j] = cars[i]->id;
 				}
 			}
 			else {
-				for (int j = 1; j < cars[i].getLength(); j++) {
-					tempBoard[cars[i].getOriginIndex() + j * ROWSIZE] = cars[i].id;
+				for (int j = 1; j < cars[i]->getLength(); j++) {
+					tempBoard[cars[i]->getOriginIndex() + j * ROWSIZE] = cars[i]->id;
 				}
 			}
 		}
