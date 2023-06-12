@@ -19,7 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Constants.h" />
+    <ClInclude Include="Constants.h" />
     <ClCompile Include="HorizontalCar.cpp" />
     <ClCompile Include="rushHour(HarshGupta).cpp" />
     <ClCompile Include="Board.cpp" />

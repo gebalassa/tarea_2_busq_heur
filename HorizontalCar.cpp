@@ -27,7 +27,7 @@ public:
 				rightmost = rightmost - 1;
 			}
 			temp = temp | position; // Agrego nueva pos
-			board = position; // Modifico tablero recibido
+			board = temp; // Modifico tablero recibido
 			return true;
 		}
 		return false;
@@ -47,7 +47,7 @@ public:
 		}
 		else if (move == "right") {
 			// Checking borders
-			if ((rightmost - 1) / ROWSIZE != rightmost / ROWSIZE) {
+			if (rightmost == 0 || (rightmost - 1) / ROWSIZE != rightmost / ROWSIZE) {
 				return false;
 			}
 			// Check other cars

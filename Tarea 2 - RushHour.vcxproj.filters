@@ -36,8 +36,10 @@
     <ClCompile Include="HorizontalCar.cpp">
       <Filter>Archivos de origen</Filter>
     </ClCompile>
-    <ClCompile Include="Constants.h">
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Constants.h">
       <Filter>Archivos de origen</Filter>
-    </ClCompile>
+    </ClInclude>
   </ItemGroup>
 </Project>

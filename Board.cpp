@@ -15,6 +15,10 @@ class Board {
 public:
 	bitset<SIZE> board;
 	vector<shared_ptr<Car>> cars;
+	// Victoria 
+	static const int exitIndex = 18;
+	// Jugador
+	shared_ptr<HorizontalCar> playerCar;
 	// IDs
 	char idList[15] = { 'A','B','C','D','E','F','G','H','I','J','K','L','M','O','P' };
 	int idCounter = 0;
@@ -32,6 +36,7 @@ public:
 		// TODO
 		board = 0b0;
 		cars = {};
+		children = {};
 		// CREAR AUTOS Y AGREGAR AL TABLERO
 		// ??
 		//????
@@ -77,6 +82,19 @@ public:
 		}
 	}
 
+	// Agrega auto rojo del jugador
+	void addPlayerCar(bitset<SIZE> origin, int length) {
+		if (checkValidCarPlacement(origin, length, true)) {
+			// Agrego a jugador
+			addCar(origin, length, true);
+			// Modifico variables necesarias
+			playerCar = dynamic_pointer_cast<HorizontalCar>(cars[cars.size() - 1]);
+			idCounter--; // Evito perder una letra de nombres
+			playerCar->id = 'R'; // Agrego letra correcta ('R') a jugador
+
+		}
+	}
+
 	// Retorna si ubicación de auto es válida
 	bool checkValidCarPlacement(bitset<SIZE>& origin, int length, bool isHorizontal) {
 
@@ -106,11 +124,15 @@ public:
 		for (int i = 1; i < length; i++) {
 			if (isHorizontal) {
 				bitset<SIZE> tempBoard = origin << i;
-				if ((board & tempBoard).any()) { return false; }
+				if ((board & tempBoard).any()) {
+					return false;
+				}
 			}
 			else {
 				bitset<SIZE> tempBoard = origin << i * ROWSIZE;
-				if ((board & tempBoard).any()) { return false; }
+				if ((board & tempBoard).any()) {
+					return false;
+				}
 			}
 		}
 		return true;
@@ -118,7 +140,159 @@ public:
 
 	// Generador de movimientos
 	void generateMoves() {
-		// TODO
+		// Por cada auto
+		shared_ptr<Car> currCar;
+		for (int i = 0; i < (int)cars.size(); i++) {
+			currCar = cars[i];
+			// Movimientos IZQ y DER
+			if (currCar->isHorizontal) {
+				shared_ptr<HorizontalCar> currHorizontalCar = dynamic_pointer_cast<HorizontalCar>(currCar);
+				int movesToReverse = 0;
+
+				// IZQUIERDA
+				while (currHorizontalCar->makeMove("left", board)) {
+					// Aumenta movimientos a revertir
+					movesToReverse++;
+					// Preparación nuevo hijo
+					Board newBoard = Board();
+					// Copiar autos al nuevo hijo
+					for (int j = 0; j < (int)cars.size(); j++) {
+						if (cars[j]->id == 'R') {
+							newBoard.addPlayerCar(bitset_from_index(playerCar->getOriginIndex()), playerCar->getLength());
+						}
+						else {
+							if (cars[j]->isHorizontal) {
+								newBoard.addCar(bitset_from_index(cars[j]->getOriginIndex()), cars[j]->getLength(), true);
+							}
+							else {
+								newBoard.addCar(bitset_from_index(cars[j]->getOriginIndex()), cars[j]->getLength(), false);
+							}
+						}
+					}
+					// Puntuación heurística
+					newBoard.score = newBoard.heuristicBlockingCars();
+					// Agregar nuevo hijo a lista de prioridad
+					children.push(newBoard);
+				}
+				// REINICIO A POSICION ORIGINAL usando moviento en dirección opuesta
+				for (int j = 0; j < movesToReverse; j++) {
+					currHorizontalCar->makeMove("right", board);
+				}
+				movesToReverse = 0;
+
+				// DERECHA
+				while (currHorizontalCar->makeMove("right", board)) {
+					// Aumenta movimientos a revertir
+					movesToReverse++;
+					// Preparación nuevo hijo
+					Board newBoard = Board();
+					// Copiar autos al nuevo hijo
+					for (int j = 0; j < (int)cars.size(); j++) {
+						if (cars[j]->id == 'R') {
+							newBoard.addPlayerCar(bitset_from_index(playerCar->getOriginIndex()), playerCar->getLength());
+						}
+						else {
+							if (cars[j]->isHorizontal) {
+								newBoard.addCar(bitset_from_index(cars[j]->getOriginIndex()), cars[j]->getLength(), true);
+							}
+							else {
+								newBoard.addCar(bitset_from_index(cars[j]->getOriginIndex()), cars[j]->getLength(), false);
+							}
+						}
+					}
+					// Puntuación heurística
+					newBoard.score = newBoard.heuristicBlockingCars();
+					// Agregar nuevo hijo a lista de prioridad
+					children.push(newBoard);
+				}
+				// REINICIO A POSICION ORIGINAL usando moviento en dirección opuesta
+				for (int j = 0; j < movesToReverse; j++) {
+					currHorizontalCar->makeMove("left", board);
+				}
+				movesToReverse = 0;
+			}
+			// Movimientos ARRIBA y ABAJO
+			//TODO
+			else {
+				shared_ptr<VerticalCar> currVerticalCar = dynamic_pointer_cast<VerticalCar>(currCar);
+				int movesToReverse = 0;
+
+				// ARRIBA
+				while (currVerticalCar->makeMove("up", board)) {
+					// Aumenta movimientos a revertir
+					movesToReverse++;
+					// Preparación nuevo hijo
+					Board newBoard = Board();
+					// Copiar autos al nuevo hijo
+					for (int j = 0; j < (int)cars.size(); j++) {
+						if (cars[j]->id == 'R') {
+							newBoard.addPlayerCar(bitset_from_index(playerCar->getOriginIndex()), playerCar->getLength());
+						}
+						else {
+							if (cars[j]->isHorizontal) {
+								newBoard.addCar(bitset_from_index(cars[j]->getOriginIndex()), cars[j]->getLength(), true);
+							}
+							else {
+								newBoard.addCar(bitset_from_index(cars[j]->getOriginIndex()), cars[j]->getLength(), false);
+							}
+						}
+					}
+					// Puntuación heurística
+					newBoard.score = newBoard.heuristicBlockingCars();
+					// Agregar nuevo hijo a lista de prioridad
+					children.push(newBoard);
+				}
+				// REINICIO A POSICION ORIGINAL usando moviento en dirección opuesta
+				for (int j = 0; j < movesToReverse; j++) {
+					currVerticalCar->makeMove("down", board);
+				}
+				movesToReverse = 0;
+
+				//ABAJO
+				while (currVerticalCar->makeMove("down", board)) {
+					// Aumenta movimientos a revertir
+					movesToReverse++;
+					// Preparación nuevo hijo
+					Board newBoard = Board();
+					// Copiar autos al nuevo hijo
+					for (int j = 0; j < (int)cars.size(); j++) {
+						if (cars[j]->id == 'R') {
+							newBoard.addPlayerCar(bitset_from_index(playerCar->getOriginIndex()), playerCar->getLength());
+						}
+						else {
+							if (cars[j]->isHorizontal) {
+								newBoard.addCar(bitset_from_index(cars[j]->getOriginIndex()), cars[j]->getLength(), true);
+							}
+							else {
+								newBoard.addCar(bitset_from_index(cars[j]->getOriginIndex()), cars[j]->getLength(), false);
+							}
+						}
+					}
+					// Puntuación heurística
+					newBoard.score = newBoard.heuristicBlockingCars();
+					// Agregar nuevo hijo a lista de prioridad
+					children.push(newBoard);
+				}
+				// REINICIO A POSICION ORIGINAL usando moviento en dirección opuesta
+				for (int j = 0; j < movesToReverse; j++) {
+					currVerticalCar->makeMove("up", board);
+				}
+				movesToReverse = 0;
+			}
+
+
+
+
+		}
+		// TODO: REINICIAR VARIABLES UTILIZADAS
+		// Board
+		// 
+	}
+
+	//
+	int heuristicBlockingCars() {
+		//TODO
+		return 100;
 	}
 
 	// Índice de pieza desde bitset
@@ -174,7 +348,7 @@ public:
 		// Imprimir
 		cout << "+ 0 1 2 3 4 5" << "\n";
 		cout << "0 ";
-		for (int i = SIZE-1; i >= 0; i--) {
+		for (int i = SIZE - 1; i >= 0; i--) {
 			if (i % ROWSIZE == 0 && i != 0) {
 				cout << tempBoard[i] << "\n" << (ROWSIZE - i / ROWSIZE) << " ";
 			}

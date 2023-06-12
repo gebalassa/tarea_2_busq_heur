@@ -58,7 +58,7 @@ public:
 				lowermost = lowermost - ROWSIZE;
 			}
 			temp = temp | position; // Agrego nueva pos
-			board = position; // Modifico tablero recibido
+			board = temp; // Modifico tablero recibido
 			return true;
 		}
 		return false;

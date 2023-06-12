@@ -36,7 +36,7 @@ int main() {
 	//cout << auxHorizontalCar->leftmost << endl;
 	//cout << auxHorizontalCar->rightmost << endl;
 
-	// Board: Priority Queue
+	 //Board: Priority Queue
 	//Board aux = Board();
 	//Board b1 = Board();
 	//Board b2 = Board();
@@ -51,4 +51,22 @@ int main() {
 	//	cout << aux.children.top().score << endl;
 	//	aux.children.pop();
 	//}
+
+	// Board: GenerateMoves()
+	Board b = Board();
+	// 1 AUTO
+	b.addCar(b.bitset_from_index(8), 3, true);
+	b.addCar(b.bitset_from_index(14), 2, true);
+	b.addCar(b.bitset_from_index(18), 3, false);
+	b.addCar(b.bitset_from_index(0), 2, true);
+	b.print_board_letters();
+	b.generateMoves();
+	int size = (int)b.children.size();
+	cout << size << endl;
+	for (int i = 0; i < size; i++) {
+		Board aux = b.children.top();
+		cout << endl;
+		aux.print_board_letters();
+		b.children.pop();
+	}
 }
