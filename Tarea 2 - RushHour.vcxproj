@@ -19,14 +19,14 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Board.cpp" />
     <ClInclude Include="Constants.h" />
     <ClCompile Include="HorizontalCar.cpp" />
-    <ClCompile Include="rushHour(HarshGupta).cpp" />
-    <ClCompile Include="Board.cpp" />
     <ClCompile Include="Car.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="RushHourGame.cpp" />
+    <ClCompile Include="Statistics.cpp" />
     <ClCompile Include="VerticalCar.cpp" />
+    <ClInclude Include="Statistics.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>

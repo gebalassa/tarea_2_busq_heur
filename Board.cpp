@@ -5,11 +5,10 @@
 #include <queue>
 #include <stdexcept>
 #include "Constants.h"
+#include "Statistics.h"
 #include "HorizontalCar.cpp"
 #include "VerticalCar.cpp"
 #include "Car.cpp"
-
-using namespace std;
 
 class Board {
 public:
@@ -20,26 +19,28 @@ public:
 	// Jugador
 	shared_ptr<HorizontalCar> playerCar;
 	// IDs
-	char idList[15] = { 'A','B','C','D','E','F','G','H','I','J','K','L','M','O','P' };
+	char idList[17] = { 'A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q' };
 	int idCounter = 0;
 	// Search
 	class Compare {
 	public:
 		bool operator() (Board a, Board b) {
-			return (a.score < b.score);
+			return (a.fscore < b.fscore);
 		}
 	};
+	int hscore;
+	int gscore;
+	int fscore;
 	priority_queue<Board, vector<Board>, Compare> children;
-	int score;
+	Board* parent;
 
 	Board() {
-		// TODO
 		board = 0b0;
 		cars = {};
-		children = {};
-		// CREAR AUTOS Y AGREGAR AL TABLERO
-		// ??
-		//????
+		hscore = 0;
+		gscore = 0;
+		fscore = 0;
+		parent = nullptr;
 	}
 
 	// Agrega auto a autos y al tablero (retorna si fue exitoso)
@@ -81,6 +82,13 @@ public:
 			cout << "ERROR: Colocacion de auto invalida!" << endl;
 		}
 	}
+	// Alternativa
+	void addCar(int originIndex, int length, bool isHorizontal) {
+		if (originIndex > SIZE || originIndex < 0) { throw invalid_argument("addCar: Indice fuera de limite"); }
+		bitset<SIZE> aux = bitset_from_index(originIndex);
+		addCar(aux, length, isHorizontal);
+	}
+
 
 	// Agrega auto rojo del jugador
 	void addPlayerCar(bitset<SIZE> origin, int length) {
@@ -93,6 +101,12 @@ public:
 			playerCar->id = 'R'; // Agrego letra correcta ('R') a jugador
 
 		}
+	}
+	// Alternativa
+	void addPlayerCar(int originIndex, int length) {
+		if (originIndex > SIZE || originIndex < 0) { throw invalid_argument("addPlayerCar: Indice fuera de limite"); }
+		bitset<SIZE> aux = bitset_from_index(originIndex);
+		addPlayerCar(aux, length);
 	}
 
 	// Retorna si ubicación de auto es válida
@@ -144,6 +158,7 @@ public:
 		shared_ptr<Car> currCar;
 		for (int i = 0; i < (int)cars.size(); i++) {
 			currCar = cars[i];
+
 			// Movimientos IZQ y DER
 			if (currCar->isHorizontal) {
 				shared_ptr<HorizontalCar> currHorizontalCar = dynamic_pointer_cast<HorizontalCar>(currCar);
@@ -170,8 +185,12 @@ public:
 						}
 					}
 					// Puntuación heurística
-					newBoard.score = newBoard.heuristicBlockingCars();
-					// Agregar nuevo hijo a lista de prioridad
+					newBoard.gscore = gscore + 1;
+					newBoard.hscore = newBoard.heuristicBlockingCars();
+					newBoard.fscore = newBoard.gscore + newBoard.hscore;
+					// Asignar padre al hijo
+					newBoard.parent = this;
+					// Agregar nuevo hijo
 					children.push(newBoard);
 				}
 				// REINICIO A POSICION ORIGINAL usando moviento en dirección opuesta
@@ -201,8 +220,12 @@ public:
 						}
 					}
 					// Puntuación heurística
-					newBoard.score = newBoard.heuristicBlockingCars();
-					// Agregar nuevo hijo a lista de prioridad
+					newBoard.gscore = gscore + 1;
+					newBoard.hscore = newBoard.heuristicBlockingCars();
+					newBoard.fscore = newBoard.gscore + newBoard.hscore;
+					// Asignar padre al hijo
+					newBoard.parent = this;
+					// Agregar nuevo hijo
 					children.push(newBoard);
 				}
 				// REINICIO A POSICION ORIGINAL usando moviento en dirección opuesta
@@ -238,8 +261,12 @@ public:
 						}
 					}
 					// Puntuación heurística
-					newBoard.score = newBoard.heuristicBlockingCars();
-					// Agregar nuevo hijo a lista de prioridad
+					newBoard.gscore = gscore + 1;
+					newBoard.hscore = newBoard.heuristicBlockingCars();
+					newBoard.fscore = newBoard.gscore + newBoard.hscore;
+					// Asignar padre al hijo
+					newBoard.parent = this;
+					// Agregar nuevo hijo
 					children.push(newBoard);
 				}
 				// REINICIO A POSICION ORIGINAL usando moviento en dirección opuesta
@@ -269,8 +296,12 @@ public:
 						}
 					}
 					// Puntuación heurística
-					newBoard.score = newBoard.heuristicBlockingCars();
-					// Agregar nuevo hijo a lista de prioridad
+					newBoard.gscore = gscore + 1;
+					newBoard.hscore = newBoard.heuristicBlockingCars();
+					newBoard.fscore = newBoard.gscore + newBoard.hscore;
+					// Asignar padre al hijo
+					newBoard.parent = this;
+					// Agregar nuevo hijo
 					children.push(newBoard);
 				}
 				// REINICIO A POSICION ORIGINAL usando moviento en dirección opuesta
@@ -279,20 +310,141 @@ public:
 				}
 				movesToReverse = 0;
 			}
-
-
-
-
 		}
-		// TODO: REINICIAR VARIABLES UTILIZADAS
-		// Board
-		// 
 	}
 
-	//
+	// A*
+	vector<Board> aStar(Board& start) {
+		// Estadisticas
+		Statistics::instance->reset();
+		//
+		priority_queue<Board, vector<Board>, Compare> open = {};
+		vector<Board> closed = {};
+		start.fscore = 0;
+		start.parent = nullptr;
+		open.push(start);
+
+		// Loop
+		while (!open.empty()) {
+			Board currNode = open.top(); open.pop();
+			// Generacion de hijos. Puntajes f,g,h y 'parent' se asignan aqui
+			currNode.generateMoves();
+
+			// Por cada hijo reviso listas y veo si agrego a OPEN
+			auto childrenCopy = currNode.children;
+			for (int i = 0; i < (int)currNode.children.size(); i++) {
+				bool isWorse = false;
+				Board currChildNode = childrenCopy.top(); childrenCopy.pop();
+				// Estadisticas
+				Statistics::instance->astar_visited_nodes++;
+
+				// Chequeo victoria
+				if (currChildNode.isVictory()) {
+					closed.push_back(currChildNode);
+					// Estadisticas
+					cout << "NODOS A*:" << Statistics::instance->astar_visited_nodes << endl;
+					// Reconstruccion camino
+					vector<Board> path = {};
+					Board currPathNode = currChildNode;
+					// Ciclo hijo->padre
+					while (currPathNode.parent != nullptr) {
+						path.push_back(currPathNode);
+						currPathNode = *currPathNode.parent;
+					}
+					// Meto raiz
+					path.push_back(currPathNode);
+					// Retorno camino
+					return path;
+				}
+
+				// Comparar a OPEN
+				auto openCopy = open;
+				for (int j = 0; j < (int)open.size(); j++) {
+					Board currOpenNode = openCopy.top(); openCopy.pop();
+					if (currChildNode.board == currOpenNode.board &&
+						currChildNode.fscore <= currOpenNode.fscore) {
+						isWorse = true; break;
+					}
+				}
+				if (isWorse) { continue; }
+
+				// Comparar a CLOSED
+				for (int j = 0; j < (int)closed.size(); j++) {
+					;
+					if (currChildNode.board == closed[j].board &&
+						currChildNode.fscore <= closed[j].fscore) {
+						isWorse = true; break;
+					}
+				}
+				if (isWorse) { continue; }
+
+				// No existe en OPEN ni CLOSED, o existe pero es MEJOR...
+				open.push(currChildNode);
+			}
+
+			// Cierro el nodo
+			closed.push_back(currNode);
+		}
+
+		// Si no encuentra el objetivo, retorna vacio
+		return vector<Board>();
+	}
+
+	// Heuristica de numero de autos bloqueando
 	int heuristicBlockingCars() {
-		//TODO
-		return 100;
+		int rightmostIndex = exitIndex;
+		int leftmostIndex = playerCar->getOriginIndex() - 1;
+		int blockingCounter = 0;
+		bitset<SIZE> checkable_positions = 0b0;
+		for (int i = exitIndex; i <= leftmostIndex; i++) {
+			checkable_positions[i] = 1;
+		}
+		// Conteo de autos bloqueando
+		for (int i = 0; i < (int)cars.size(); i++) {
+			if (cars[i]->id != 'R' && (cars[i]->position & checkable_positions).any()) {
+				blockingCounter++;
+			}
+		}
+		// Se devuelve negativo, pues mientras mas bloqueos, peor
+		return -1 * blockingCounter;
+	}
+
+	// Chequea victoria
+	bool isVictory() {
+		for (int i = 0; i < (int)cars.size(); i++) {
+			if (cars[i]->id == 'R' && cars[i]->position[exitIndex] == 1) {
+				return true;
+			}
+			else {
+				return false;
+			}
+		}
+	}
+
+	// Setear puzle por defecto
+	void setDefaultPuzzle() {
+		cars.clear();
+		addPlayerCar(20, 2);
+		addCar(33, 2, true);
+		addCar(26, 2, false);
+		addCar(30, 2, true);
+		addCar(28, 2, true);
+		addCar(19, 2, false);
+		addCar(12, 3, false);
+		addCar(10, 3, false);
+		addCar(3, 2, false);
+		addCar(6, 3, true);
+	}
+
+	// Puzle debugging
+	void setDebugPuzzle() {
+		cars.clear();
+		addPlayerCar(22, 2);
+		addCar(21, 2, false);
+		addCar(20, 2, false);
+		addCar(19, 2, false);
+		addCar(18, 2, false);
+
 	}
 
 	// Índice de pieza desde bitset
