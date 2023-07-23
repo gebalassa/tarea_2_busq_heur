@@ -1,0 +1,12 @@
+﻿  Board.cpp
+  HorizontalCar.cpp
+  Car.cpp
+  main.cpp
+  Statistics.cpp
+  VerticalCar.cpp
+  Generando código
+  Previous IPDB not found, fall back to full compilation.
+C:\Users\gbala\OneDrive\Escritorio\WORKSPACE - TAREA 2 (NO TERMINADA)\Tarea 2 - RushHour\Board.cpp(437): warning C4715: 'Board::isVictory': no todas las rutas de acceso de control devuelven un valor
+  All 470 functions were compiled because no usable IPDB/IOBJ from previous compilation was found.
+  Generación de código finalizada
+  Tarea 2 - RushHour.vcxproj -> C:\Users\gbala\OneDrive\Escritorio\WORKSPACE - TAREA 2 (NO TERMINADA)\Tarea 2 - RushHour\Release\Tarea 2 - RushHour.exe

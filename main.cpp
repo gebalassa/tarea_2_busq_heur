@@ -55,10 +55,11 @@ int main() {
 
 	// Board: A* (aStar())
 	Board b = Board();
-	b.setDebugPuzzle();
+	b.setDefaultPuzzle();
+	//b.setDebugPuzzle();
 	b.print_board_letters();
-	vector<Board> res = b.aStar(b);
+	vector<shared_ptr<Board>> res = b.aStar(b);
 	for (int i = 0; i < (int)res.size(); i++) {
-		res[i].print_board_letters(); cout << endl;
+		res[i]->print_board_letters(); cout << endl;
 	}
 }

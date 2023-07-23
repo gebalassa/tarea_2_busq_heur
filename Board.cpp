@@ -10,6 +10,7 @@
 #include "VerticalCar.cpp"
 #include "Car.cpp"
 
+
 class Board {
 public:
 	bitset<SIZE> board;
@@ -24,19 +25,20 @@ public:
 	// Search
 	class Compare {
 	public:
-		bool operator() (Board a, Board b) {
-			return (a.fscore < b.fscore);
+		bool operator() (const shared_ptr<Board> a, const shared_ptr<Board> b) {
+			return (a->fscore < b->fscore);
 		}
 	};
 	int hscore;
 	int gscore;
 	int fscore;
-	priority_queue<Board, vector<Board>, Compare> children;
-	Board* parent;
+	priority_queue<shared_ptr<Board>, vector<shared_ptr<Board>>, Compare> children;
+	shared_ptr<Board> parent;
 
 	Board() {
 		board = 0b0;
 		cars = {};
+		children = {};
 		hscore = 0;
 		gscore = 0;
 		fscore = 0;
@@ -153,7 +155,7 @@ public:
 	}
 
 	// Generador de movimientos
-	void generateMoves() {
+	void generateMoves(shared_ptr<Board> parent) {
 		// Por cada auto
 		shared_ptr<Car> currCar;
 		for (int i = 0; i < (int)cars.size(); i++) {
@@ -185,13 +187,14 @@ public:
 						}
 					}
 					// Puntuación heurística
-					newBoard.gscore = gscore + 1;
+					newBoard.gscore = gscore - 1; // Puntuación disminuye a mayor distancia
 					newBoard.hscore = newBoard.heuristicBlockingCars();
 					newBoard.fscore = newBoard.gscore + newBoard.hscore;
 					// Asignar padre al hijo
-					newBoard.parent = this;
+					newBoard.parent = parent;
 					// Agregar nuevo hijo
-					children.push(newBoard);
+					shared_ptr<Board> newBoardPtr = make_shared<Board>(newBoard);
+					children.push(newBoardPtr);
 				}
 				// REINICIO A POSICION ORIGINAL usando moviento en dirección opuesta
 				for (int j = 0; j < movesToReverse; j++) {
@@ -220,13 +223,14 @@ public:
 						}
 					}
 					// Puntuación heurística
-					newBoard.gscore = gscore + 1;
+					newBoard.gscore = gscore - 1; // Puntuación disminuye a mayor distancia
 					newBoard.hscore = newBoard.heuristicBlockingCars();
 					newBoard.fscore = newBoard.gscore + newBoard.hscore;
 					// Asignar padre al hijo
-					newBoard.parent = this;
+					newBoard.parent = parent;
 					// Agregar nuevo hijo
-					children.push(newBoard);
+					shared_ptr<Board> newBoardPtr = make_shared<Board>(newBoard);
+					children.push(newBoardPtr);
 				}
 				// REINICIO A POSICION ORIGINAL usando moviento en dirección opuesta
 				for (int j = 0; j < movesToReverse; j++) {
@@ -261,13 +265,14 @@ public:
 						}
 					}
 					// Puntuación heurística
-					newBoard.gscore = gscore + 1;
+					newBoard.gscore = gscore - 1; // Puntuación disminuye a mayor distancia
 					newBoard.hscore = newBoard.heuristicBlockingCars();
 					newBoard.fscore = newBoard.gscore + newBoard.hscore;
 					// Asignar padre al hijo
-					newBoard.parent = this;
+					newBoard.parent = parent;
 					// Agregar nuevo hijo
-					children.push(newBoard);
+					shared_ptr<Board> newBoardPtr = make_shared<Board>(newBoard);
+					children.push(newBoardPtr);
 				}
 				// REINICIO A POSICION ORIGINAL usando moviento en dirección opuesta
 				for (int j = 0; j < movesToReverse; j++) {
@@ -296,13 +301,14 @@ public:
 						}
 					}
 					// Puntuación heurística
-					newBoard.gscore = gscore + 1;
+					newBoard.gscore = gscore - 1; // Puntuación disminuye a mayor distancia
 					newBoard.hscore = newBoard.heuristicBlockingCars();
 					newBoard.fscore = newBoard.gscore + newBoard.hscore;
 					// Asignar padre al hijo
-					newBoard.parent = this;
+					newBoard.parent = parent;
 					// Agregar nuevo hijo
-					children.push(newBoard);
+					shared_ptr<Board> newBoardPtr = make_shared<Board>(newBoard);
+					children.push(newBoardPtr);
 				}
 				// REINICIO A POSICION ORIGINAL usando moviento en dirección opuesta
 				for (int j = 0; j < movesToReverse; j++) {
@@ -313,43 +319,51 @@ public:
 		}
 	}
 
+
 	// A*
-	vector<Board> aStar(Board& start) {
+	vector<shared_ptr<Board>> aStar(Board& start) {
 		// Estadisticas
 		Statistics::instance->reset();
 		//
-		priority_queue<Board, vector<Board>, Compare> open = {};
-		vector<Board> closed = {};
+		priority_queue<shared_ptr<Board>, vector<shared_ptr<Board>>, Compare> open = {};
+		vector<shared_ptr<Board>> closed = {};
 		start.fscore = 0;
 		start.parent = nullptr;
-		open.push(start);
+		open.push(make_shared<Board>(start));
 
 		// Loop
 		while (!open.empty()) {
-			Board currNode = open.top(); open.pop();
+			shared_ptr<Board> currNode = open.top(); open.pop();
 			// Generacion de hijos. Puntajes f,g,h y 'parent' se asignan aqui
-			currNode.generateMoves();
+			currNode->generateMoves(currNode);
+
+			// DEBUG PRINT
+			//for (int i = 0; i < 1; i++) {//currNode->children.size(); i++) {
+			//	shared_ptr<Board> aux = currNode->children.top(); //children.pop();
+			//	aux->print_board_letters();
+			//}
+			//cout << "\n=========================\n";
+			// FIN DEBUG
 
 			// Por cada hijo reviso listas y veo si agrego a OPEN
-			auto childrenCopy = currNode.children;
-			for (int i = 0; i < (int)currNode.children.size(); i++) {
+			while (!currNode->children.empty()) {
 				bool isWorse = false;
-				Board currChildNode = childrenCopy.top(); childrenCopy.pop();
+				shared_ptr<Board> currChildNode = currNode->children.top(); currNode->children.pop();
 				// Estadisticas
 				Statistics::instance->astar_visited_nodes++;
 
 				// Chequeo victoria
-				if (currChildNode.isVictory()) {
+				if (currChildNode->isVictory()) {
 					closed.push_back(currChildNode);
 					// Estadisticas
 					cout << "NODOS A*:" << Statistics::instance->astar_visited_nodes << endl;
 					// Reconstruccion camino
-					vector<Board> path = {};
-					Board currPathNode = currChildNode;
+					vector<shared_ptr<Board>> path = {};
+					shared_ptr<Board> currPathNode = currChildNode;
 					// Ciclo hijo->padre
-					while (currPathNode.parent != nullptr) {
+					while (currPathNode->parent != nullptr) {
 						path.push_back(currPathNode);
-						currPathNode = *currPathNode.parent;
+						currPathNode = currPathNode->parent;
 					}
 					// Meto raiz
 					path.push_back(currPathNode);
@@ -360,9 +374,9 @@ public:
 				// Comparar a OPEN
 				auto openCopy = open;
 				for (int j = 0; j < (int)open.size(); j++) {
-					Board currOpenNode = openCopy.top(); openCopy.pop();
-					if (currChildNode.board == currOpenNode.board &&
-						currChildNode.fscore <= currOpenNode.fscore) {
+					shared_ptr<Board> currOpenNode = openCopy.top(); openCopy.pop();
+					if (isEqualPosition(currChildNode, currOpenNode) &&
+						currChildNode->fscore <= currOpenNode->fscore) {
 						isWorse = true; break;
 					}
 				}
@@ -371,8 +385,8 @@ public:
 				// Comparar a CLOSED
 				for (int j = 0; j < (int)closed.size(); j++) {
 					;
-					if (currChildNode.board == closed[j].board &&
-						currChildNode.fscore <= closed[j].fscore) {
+					if (isEqualPosition(currChildNode, closed[j]) &&
+						currChildNode->fscore <= closed[j]->fscore) {
 						isWorse = true; break;
 					}
 				}
@@ -387,7 +401,7 @@ public:
 		}
 
 		// Si no encuentra el objetivo, retorna vacio
-		return vector<Board>();
+		return vector<shared_ptr<Board>>();
 	}
 
 	// Heuristica de numero de autos bloqueando
@@ -405,6 +419,7 @@ public:
 				blockingCounter++;
 			}
 		}
+
 		// Se devuelve negativo, pues mientras mas bloqueos, peor
 		return -1 * blockingCounter;
 	}
@@ -419,6 +434,23 @@ public:
 				return false;
 			}
 		}
+	}
+
+	// Chequear si dos nodos tienen igual posicion de autos
+	bool isEqualPosition(shared_ptr<Board> a, shared_ptr<Board> b) {
+		if (a->board != b->board) return false; // Comp. Tablero general (1s y 0s)
+		else if (a->cars.size() != b->cars.size()) return false; // Numero de autos
+		// Comparacion pos. ENTRE autos
+		int size = a->cars.size();
+		for (int i = 0; i < size; i++) {
+			for (int j = 0; j < size; j++ ) {
+				if (a->cars[i]->id == b->cars[j]->id &&
+					a->cars[i]->position != b->cars[j]->position) {
+					return false;
+				}
+			}
+		}
+		return true;
 	}
 
 	// Setear puzle por defecto
@@ -444,7 +476,8 @@ public:
 		addCar(20, 2, false);
 		addCar(19, 2, false);
 		addCar(18, 2, false);
-
+		addCar(14, 2, true);
+		addCar(32, 2, true);
 	}
 
 	// Índice de pieza desde bitset
