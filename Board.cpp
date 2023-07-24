@@ -5,6 +5,7 @@
 #include <vector>
 #include <queue>
 #include <set>
+#include <iomanip>
 #include <stdexcept>
 #include "Constants.h"
 #include "Statistics.h"
@@ -324,7 +325,7 @@ public:
 	// BFS
 	vector<shared_ptr<Board>> bfs(Board& start) {
 		// Estadísticas: Reinicio
-		 Statistics::instance->reset();
+		Statistics::instance->reset();
 		// Contenedores
 		queue<shared_ptr<Board>> open = {};
 		vector<shared_ptr<Board>> reached = {};
@@ -513,7 +514,7 @@ public:
 		// Comparacion pos. ENTRE autos
 		int size = a->cars.size();
 		for (int i = 0; i < size; i++) {
-			for (int j = 0; j < size; j++ ) {
+			for (int j = 0; j < size; j++) {
 				if (a->cars[i]->id == b->cars[j]->id &&
 					a->cars[i]->position != b->cars[j]->position) {
 					return false;
@@ -525,7 +526,9 @@ public:
 
 	// Setear puzle por defecto
 	void setDefaultPuzzle() {
+		board = 0b0;
 		cars.clear();
+		//
 		addPlayerCar(20, 2);
 		addCar(33, 2, true);
 		addCar(26, 2, false);
@@ -540,7 +543,9 @@ public:
 
 	// Puzle debugging
 	void setDebugPuzzle() {
+		board = 0b0;
 		cars.clear();
+		//
 		addPlayerCar(22, 2);
 		addCar(21, 2, false);
 		addCar(20, 2, false);
@@ -548,6 +553,160 @@ public:
 		addCar(18, 2, false);
 		addCar(14, 2, true);
 		addCar(32, 2, true);
+	}
+
+	vector<shared_ptr<Board>> setCustomPuzzle(Board& start) {
+		board = 0b0;
+		cars.clear();
+		// Preparación
+		bool valid = false;
+		bool exit = false;
+		int parsed = -1;
+		char raw[3] = "EE";
+		// Origen del jugador
+		while (!valid & !exit) {
+			cout << "Ingrese origen del jugador (18-22) o salir con 'q':";
+			// Input
+			cin >> std::setw(3) >> raw; cin.ignore(numeric_limits<streamsize>::max(), '\n');
+			// DEBUG: Imprime esto si falla en parsear a chars
+			if (cin.fail()) {
+				cout << "FAILED in setCustomPuzzle: Player car" << endl;
+			}
+			// Chequeo salida "q"
+			if (raw[0] == 'q') { exit = true; break; }
+			// Opción
+			parsed = stoi(raw);
+			if (parsed >= 18 && parsed <= 22) {
+				addPlayerCar(parsed, 2);
+				valid = true; break;
+			}
+			else {
+				cout << "Posicion invalida de jugador!" << endl;
+			}
+		}
+		// Otros autos
+		bool carsReady = false;
+		while (!carsReady && !exit) {
+			valid = false;
+			bool confirmed = false;
+			// Consulta para ingresar nuevos autos
+			while (!confirmed && !valid & !exit) {
+				char rawConfirmNew[2] = "E";
+				string parsedConfirmNew = "";
+				cout << "Deseo ingresar mas autos? (y/n) o 'q' para salir: ";
+				// Input nuevo auto
+				cin >> std::setw(2) >> rawConfirmNew; cin.ignore(numeric_limits<streamsize>::max(), '\n');
+				// DEBUG: Imprime esto si falla en parsear a chars
+				if (cin.fail()) {
+					cout << "FAILED in setCustomPuzzle: Confirm New Car" << endl;
+				}
+				// Chequeo salida "q"
+				if (rawConfirmNew[0] == 'q') { exit = true; break; }
+				// Opción
+				parsedConfirmNew = rawConfirmNew;
+				if (parsedConfirmNew == "y") {
+					cout << "Se aprueba creacion de nuevo auto." << endl;
+					confirmed = true;
+				}
+				else if (parsedConfirmNew == "n") {
+					valid = true; confirmed = false; carsReady = true; break;
+				}
+			}
+			if (!confirmed) { break; }
+
+			// Parámetros nuevo auto
+			while (!valid && !exit) {
+				char rawLength[2] = "E";
+				char rawOrigin[3] = "EE";
+				char rawIsHorizontal[2] = "E";
+				int parsedLength = -1;
+				int parsedOrigin = -1;
+				string parsedIsHorizontal = "";
+				cout << "Ingrese ORIGEN auto adicional o salir con 'q':";
+				// Input origen
+				cin >> std::setw(3) >> rawOrigin; cin.ignore(numeric_limits<streamsize>::max(), '\n');
+				// DEBUG: Imprime esto si falla en parsear a chars
+				if (cin.fail()) {
+					cout << "FAILED in setCustomPuzzle: Other cars" << endl;
+				}
+				// Chequeo salida "q"
+				if (rawOrigin[0] == 'q') { exit = true; break; }
+				// Opción
+				parsedOrigin = stoi(rawOrigin);
+
+				// Input largo
+				cout << "Ingrese LARGO auto adicional o salir con 'q':";
+				cin >> std::setw(2) >> rawLength; cin.ignore(numeric_limits<streamsize>::max(), '\n');
+				// DEBUG: Imprime esto si falla en parsear a chars
+				if (cin.fail()) {
+					cout << "FAILED in setCustomPuzzle: Other cars" << endl;
+				}
+				// Chequeo salida "q"
+				if (rawLength[0] == 'q') { exit = true; break; }
+				// Opción
+				parsedLength = stoi(rawLength);
+
+				// Input IsHorizontal
+				cout << "Ingrese si nuevo auto es horizontal (y/n) o salir con 'q':";
+				cin >> std::setw(2) >> rawIsHorizontal; cin.ignore(numeric_limits<streamsize>::max(), '\n');
+				// DEBUG: Imprime esto si falla en parsear a chars
+				if (cin.fail()) {
+					cout << "FAILED in setCustomPuzzle: Other cars" << endl;
+				}
+				// Chequeo salida "q"
+				if (rawIsHorizontal[0] == 'q') { exit = true; break; }
+				// Opción
+				parsedIsHorizontal = rawIsHorizontal;
+				bool isHorizontal = false;
+				if (parsedIsHorizontal == "y") {
+					isHorizontal = true;
+				}
+				else if (parsedIsHorizontal == "n") {
+					isHorizontal = false;
+				}
+				// Intentar colocar auto, sino repetir
+				bitset<SIZE> bitsetFromParsedOrigin = bitset_from_index(parsedOrigin);
+				if (checkValidCarPlacement(bitsetFromParsedOrigin, parsedLength, isHorizontal)) {
+					addCar(parsedOrigin, parsedLength, isHorizontal);
+					cout << "-----------------------" << endl;
+					print_board_letters();
+					cout << "-----------------------" << endl;
+					valid = true; break;
+				}
+				else {
+					cout << "Datos de auto nuevo invalidos" << endl;
+					continue;
+				}
+			}
+		}
+
+		// ALGORITMOS
+		valid = false;
+		while (!valid && !exit) {
+			char rawAlgorithm[2] = "E";
+			int parsedAlgorithm = -1;
+			// Input algoritmo
+			cout << "Ingrese (1)=BFS o (2)=A* o 'q' para salir: " << endl;
+			cin >> std::setw(2) >> rawAlgorithm; cin.ignore(numeric_limits<streamsize>::max(), '\n');
+			// DEBUG: Imprime esto si falla en parsear a chars
+			if (cin.fail()) {
+				cout << "FAILED in setCustomPuzzle: Algorithm" << endl;
+			}
+			// Chequeo salida "q"
+			if (rawAlgorithm[0] == 'q') { exit = true; break; }
+			// Opción
+			parsedAlgorithm = stoi(rawAlgorithm);
+			if (parsedAlgorithm == 1) {
+				valid = true;
+				return bfs(start);
+			}
+			else if (parsedAlgorithm == 2) {
+				valid = true;
+				return aStar(start);
+			}
+		}
+		// En caso de cierre, retorn vacío
+		return vector<shared_ptr<Board>>();
 	}
 
 	// Índice de pieza desde bitset
