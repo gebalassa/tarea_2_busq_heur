@@ -1,8 +1,10 @@
 #pragma once
 #include <iostream>
+#include <algorithm>
 #include <bitset>
 #include <vector>
 #include <queue>
+#include <set>
 #include <stdexcept>
 #include "Constants.h"
 #include "Statistics.h"
@@ -319,14 +321,80 @@ public:
 		}
 	}
 
+	// BFS
+	vector<shared_ptr<Board>> bfs(Board& start) {
+		// Estadísticas: Reinicio
+		 Statistics::instance->reset();
+		// Contenedores
+		queue<shared_ptr<Board>> open = {};
+		vector<shared_ptr<Board>> reached = {};
+		// Nodo inicial
+		start.parent = nullptr;
+		shared_ptr<Board> startPtr = make_shared<Board>(start);
+		open.push(startPtr);
+		reached.push_back(startPtr);
+
+		// LOOP de OPEN
+		while (!open.empty()) {
+			// Nodo actual
+			shared_ptr<Board> currNode = open.front(); open.pop();
+			// Estadísticas
+			Statistics::instance->bfs_visited_nodes++;
+
+			// Chequeo victoria
+			if (currNode->isVictory()) {
+				reached.push_back(currNode);
+				// Estadísticas
+				cout << "NODOS BFS:" << Statistics::instance->bfs_visited_nodes << endl;
+				// Reconstruccion camino
+				vector<shared_ptr<Board>> path = {};
+				shared_ptr<Board> currPathNode = currNode;
+				// Ciclo hijo->padre
+				while (currPathNode->parent != nullptr) {
+					path.push_back(currPathNode);
+					currPathNode = currPathNode->parent;
+				}
+				// Meto raiz
+				path.push_back(currPathNode);
+				// Invierto orden
+				reverse(path.begin(), path.end());
+				// Retorno camino
+				return path;
+			}
+
+			// Si NO es victoria...
+			// Generación hijos
+			currNode->generateMoves(currNode);
+			// Exploración hijos
+			while (!currNode->children.empty()) {
+				// Inserta en REACHED y OPEN si no está en REACHED
+				shared_ptr<Board> currChildNode = currNode->children.top(); currNode->children.pop();
+				bool isIn = false;
+				for (int i = 0; i < (int)reached.size(); i++) {
+					if (isEqualPosition(currChildNode, reached[i])) {
+						isIn = true; break;
+					}
+				}
+				if (!isIn) {
+					reached.push_back(currChildNode);
+					open.push(currChildNode);
+				}
+			}
+		}
+
+		// Si no encuentra el objetivo, retorna vacio
+		cout << "Camino BFS no encontrado!!!" << endl;
+		return vector<shared_ptr<Board>>();
+	}
 
 	// A*
 	vector<shared_ptr<Board>> aStar(Board& start) {
-		// Estadisticas
+		// Estadisticas: Reinicio
 		Statistics::instance->reset();
-		//
+		// Contenedores
 		priority_queue<shared_ptr<Board>, vector<shared_ptr<Board>>, Compare> open = {};
 		vector<shared_ptr<Board>> closed = {};
+		// Nodo Inicial
 		start.fscore = 0;
 		start.parent = nullptr;
 		open.push(make_shared<Board>(start));
@@ -334,42 +402,37 @@ public:
 		// Loop
 		while (!open.empty()) {
 			shared_ptr<Board> currNode = open.top(); open.pop();
+			// Estadisticas
+			Statistics::instance->astar_visited_nodes++;
+
+			// Chequeo victoria
+			if (currNode->isVictory()) {
+				closed.push_back(currNode);
+				// Estadisticas
+				cout << "NODOS A*:" << Statistics::instance->astar_visited_nodes << endl;
+				// Reconstruccion camino
+				vector<shared_ptr<Board>> path = {};
+				shared_ptr<Board> currPathNode = currNode;
+				// Ciclo hijo->padre
+				while (currPathNode->parent != nullptr) {
+					path.push_back(currPathNode);
+					currPathNode = currPathNode->parent;
+				}
+				// Meto raiz
+				path.push_back(currPathNode);
+				// Invierto orden
+				reverse(path.begin(), path.end());
+				// Retorno camino
+				return path;
+			}
+
+			// Si NO es victoria...
 			// Generacion de hijos. Puntajes f,g,h y 'parent' se asignan aqui
 			currNode->generateMoves(currNode);
-
-			// DEBUG PRINT
-			//for (int i = 0; i < 1; i++) {//currNode->children.size(); i++) {
-			//	shared_ptr<Board> aux = currNode->children.top(); //children.pop();
-			//	aux->print_board_letters();
-			//}
-			//cout << "\n=========================\n";
-			// FIN DEBUG
-
 			// Por cada hijo reviso listas y veo si agrego a OPEN
 			while (!currNode->children.empty()) {
 				bool isWorse = false;
 				shared_ptr<Board> currChildNode = currNode->children.top(); currNode->children.pop();
-				// Estadisticas
-				Statistics::instance->astar_visited_nodes++;
-
-				// Chequeo victoria
-				if (currChildNode->isVictory()) {
-					closed.push_back(currChildNode);
-					// Estadisticas
-					cout << "NODOS A*:" << Statistics::instance->astar_visited_nodes << endl;
-					// Reconstruccion camino
-					vector<shared_ptr<Board>> path = {};
-					shared_ptr<Board> currPathNode = currChildNode;
-					// Ciclo hijo->padre
-					while (currPathNode->parent != nullptr) {
-						path.push_back(currPathNode);
-						currPathNode = currPathNode->parent;
-					}
-					// Meto raiz
-					path.push_back(currPathNode);
-					// Retorno camino
-					return path;
-				}
 
 				// Comparar a OPEN
 				auto openCopy = open;
@@ -401,11 +464,17 @@ public:
 		}
 
 		// Si no encuentra el objetivo, retorna vacio
+		cout << "Camino A* no encontrado!!!" << endl;
 		return vector<shared_ptr<Board>>();
 	}
 
-	// Heuristica de numero de autos bloqueando
+	// Heuristica de numero de autos bloqueando el camino del jugador (R)
 	int heuristicBlockingCars() {
+		// Victoria: Retorna numero muy alto (y POSITIVO)
+		if (playerCar->getOriginIndex() == exitIndex) {
+			return 999999;
+		}
+		//
 		int rightmostIndex = exitIndex;
 		int leftmostIndex = playerCar->getOriginIndex() - 1;
 		int blockingCounter = 0;
@@ -434,6 +503,7 @@ public:
 				return false;
 			}
 		}
+		return false;
 	}
 
 	// Chequear si dos nodos tienen igual posicion de autos

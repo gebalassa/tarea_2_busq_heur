@@ -53,12 +53,13 @@ int main() {
 	//	b.children.pop();
 	//}
 
-	// Board: A* (aStar())
+	// Board: A* (aStar()) & BFS (bfs())
 	Board b = Board();
 	b.setDefaultPuzzle();
 	//b.setDebugPuzzle();
-	b.print_board_letters();
-	vector<shared_ptr<Board>> res = b.aStar(b);
+	b.print_board_letters(); cout << "|----------------------|" << endl;
+	//vector<shared_ptr<Board>> res = b.aStar(b);
+	vector<shared_ptr<Board>> res = b.bfs(b);
 	for (int i = 0; i < (int)res.size(); i++) {
 		res[i]->print_board_letters(); cout << endl;
 	}
