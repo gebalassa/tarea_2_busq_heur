@@ -360,6 +360,7 @@ public:
 				// Invierto orden
 				reverse(path.begin(), path.end());
 				// Retorno camino
+				cout << "(Movimientos: " << path.size()-1 << ")" << endl;
 				return path;
 			}
 
@@ -424,6 +425,7 @@ public:
 				// Invierto orden
 				reverse(path.begin(), path.end());
 				// Retorno camino
+				cout << "(Movimientos: " << path.size() - 1 << ")" << endl;
 				return path;
 			}
 
@@ -553,6 +555,55 @@ public:
 		addCar(18, 2, false);
 		addCar(14, 2, true);
 		addCar(32, 2, true);
+	}
+
+	// PUZLES 2,3,4
+	void setPuzzle3() {
+		board = 0b0;
+		cars.clear();
+		//
+		addPlayerCar(19, 2);
+		addCar(30, 3, true);
+		addCar(26, 3, true);
+		addCar(24, 2, true);
+		addCar(21, 3, true);
+		addCar(12, 2, false);
+		addCar(3, 2, false);
+		addCar(6, 3, true);
+	}
+
+	void setPuzzle4() {
+		board = 0b0;
+		cars.clear();
+		//
+		addPlayerCar(21, 2);
+		addCar(29, 2, false);
+		addCar(27, 2, false);
+		addCar(24, 3, true);
+		addCar(11, 3, false);
+		addCar(14, 2, false);
+		addCar(12, 2, false);
+		addCar(4, 2, false);
+		addCar(8, 2, true);
+		addCar(0, 2, false);
+	}
+
+	void setPuzzle5() {
+		board = 0b0;
+		cars.clear();
+		//
+		addPlayerCar(19, 2);
+		addCar(23, 3, false);
+		addCar(28, 2, false);
+		addCar(32, 2, true);
+		addCar(25, 2, false);
+		addCar(21, 2, false);
+		addCar(12, 3, false);
+		addCar(15, 3, true);
+		addCar(3, 2, false);
+		addCar(8, 2, false);
+		addCar(6, 2, true);
+		addCar(1, 2, true);
 	}
 
 	vector<shared_ptr<Board>> setCustomPuzzle(Board& start) {
