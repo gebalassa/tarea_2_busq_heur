@@ -57,7 +57,7 @@ int main() {
 	Board b = Board();
 	// PUZLES-------------------
 	//b.setDefaultPuzzle();
-	b.setDebugPuzzle();
+	//b.setDebugPuzzle();
 	//b.setPuzzle3();
 	//b.setPuzzle4();
 	//b.setPuzzle5();
@@ -66,11 +66,13 @@ int main() {
 	cout << "Resolviendo..." << endl;
 	// ALGORITMOS----------------
 	//vector<shared_ptr<Board>> res = b.aStar(b);
-	vector<shared_ptr<Board>> res = b.bfs(b);
-	//vector<shared_ptr<Board>> res = b.setCustomPuzzle(b);
+	//vector<shared_ptr<Board>> res = b.bfs(b);
+	vector<shared_ptr<Board>> res = b.setCustomPuzzle(b);
 	// RESULTADOS
 	cout << "CAMINO:" << endl;
 	for (int i = 0; i < (int)res.size(); i++) {
 		res[i]->print_board_letters(); cout << endl;
 	}
+	cout << "Presione Enter para continuar";
+	cin.ignore(std::numeric_limits<streamsize>::max(), '\n');
 }

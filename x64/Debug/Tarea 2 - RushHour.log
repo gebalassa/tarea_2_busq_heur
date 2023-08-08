@@ -1,0 +1,10 @@
+﻿  Board.cpp
+C:\Users\gbala\OneDrive\Escritorio\TAREA 2 (Single-Agent)\WORKSPACE - TAREA 2\Tarea 2 - RushHour\Board.cpp(517,1): warning C4267: 'inicializando': conversión de 'size_t' a 'int'; posible pérdida de datos
+  HorizontalCar.cpp
+  Car.cpp
+  main.cpp
+C:\Users\gbala\OneDrive\Escritorio\TAREA 2 (Single-Agent)\WORKSPACE - TAREA 2\Tarea 2 - RushHour\Board.cpp(517,1): warning C4267: 'inicializando': conversión de 'size_t' a 'int'; posible pérdida de datos
+  Statistics.cpp
+  VerticalCar.cpp
+  Generando código...
+  Tarea 2 - RushHour.vcxproj -> C:\Users\gbala\OneDrive\Escritorio\TAREA 2 (Single-Agent)\WORKSPACE - TAREA 2\Tarea 2 - RushHour\x64\Debug\Tarea 2 - RushHour.exe
